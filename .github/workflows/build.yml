@@ -43,9 +43,9 @@ jobs:
             src
 
       - name: Setup CMake
-        uses: cmake/setup-cmake@v3
+        uses: lukka/get-cmake@v4
         with:
-          cmake-version: '3.28'
+          cmakeVersion: '3.28'
 
       - name: Configure
         run: |
