@@ -1,37 +1,44 @@
 .PHONY: all build copy-binary compile-ts build-extension clean help
 
-UNAME_S := $(shell uname -s)
-UNAME_M := $(shell uname -m)
-
-ifeq ($(UNAME_S),Linux)
-	PLATFORM := linux
-else ifeq ($(UNAME_S),Darwin)
-	PLATFORM := darwin
-else ifeq ($(OS),Windows_NT)
+ifeq ($(OS),Windows_NT)
 	PLATFORM := win32
+	ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
+		ARCH := x64
+	else ifeq ($(PROCESSOR_ARCHITECTURE),ARM64)
+		ARCH := arm64
+	else
+		ARCH := unknown
+	endif
+	EXECUTABLE_EXT := .exe
 else
-	PLATFORM := unknown
-endif
+	UNAME_S := $(shell uname -s)
+	UNAME_M := $(shell uname -m)
 
-ifeq ($(UNAME_M),x86_64)
-	ARCH := x64
-else ifeq ($(UNAME_M),aarch64)
-	ARCH := arm64
-else ifeq ($(UNAME_M),arm64)
-	ARCH := arm64
-else
-	ARCH := unknown
+	ifeq ($(UNAME_S),Linux)
+		PLATFORM := linux
+	else ifeq ($(UNAME_S),Darwin)
+		PLATFORM := darwin
+	else
+		PLATFORM := unknown
+	endif
+
+	ifeq ($(UNAME_M),x86_64)
+		ARCH := x64
+	else ifeq ($(UNAME_M),aarch64)
+		ARCH := arm64
+	else ifeq ($(UNAME_M),arm64)
+		ARCH := arm64
+	else
+		ARCH := unknown
+	endif
+	EXECUTABLE_EXT :=
 endif
 
 BUILD_DIR := build
 BINARY_NAME := tdr-lsp
-BINARY_PATH := $(BUILD_DIR)/$(BINARY_NAME)
+BINARY_PATH := $(BUILD_DIR)/$(BINARY_NAME)$(EXECUTABLE_EXT)
 BIN_INSTALL_DIR := vscode-ext/bin/$(PLATFORM)-$(ARCH)
-BINARY_INSTALL_PATH := $(BIN_INSTALL_DIR)/$(BINARY_NAME)
-
-ifeq ($(OS),Windows_NT)
-	BINARY_INSTALL_PATH := $(BINARY_INSTALL_PATH).exe
-endif
+BINARY_INSTALL_PATH := $(BIN_INSTALL_DIR)/$(BINARY_NAME)$(EXECUTABLE_EXT)
 
 help:
 	@echo "Available targets:"

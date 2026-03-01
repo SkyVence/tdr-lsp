@@ -1,0 +1,96 @@
+name: Build LSP
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_name: win32-x64
+            ext: .exe
+          - os: ubuntu-latest
+            artifact_name: linux-x64
+            ext: ''
+          - os: macos-latest
+            artifact_name: darwin-x64
+            ext: ''
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout scene-io dependency
+        uses: actions/checkout@v4
+        with:
+          repository: SkyVence/scene-io
+          path: scene-io
+          sparse-checkout: |
+            CMakeLists.txt
+            include
+            src
+
+      - name: Setup CMake
+        uses: ashutoshvarma/setup-cmake@v1
+        with:
+          cmake-version: '3.28'
+
+      - name: Configure
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: |
+          cd build
+          cmake --build . --config Release
+
+      - name: Prepare artifact
+        run: |
+          mkdir -p release/${{ matrix.artifact_name }}
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            cp build/tdr-lsp.exe release/${{ matrix.artifact_name }}/
+          else
+            cp build/tdr-lsp release/${{ matrix.artifact_name }}/
+            chmod +x release/${{ matrix.artifact_name }}/tdr-lsp
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tdr-lsp-${{ matrix.artifact_name }}
+          path: release/${{ matrix.artifact_name }}
+          retention-days: 30
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/*/*
+          draft: false
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
