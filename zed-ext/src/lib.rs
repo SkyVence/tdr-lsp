@@ -4,6 +4,10 @@ use zed_extension_api as zed;
 
 struct TdrSceneExtension;
 
+impl TdrSceneExtension {
+    const SERVER_BINARY_NAME: &'static str = "tdr-lsp";
+}
+
 impl zed::Extension for TdrSceneExtension {
     fn new() -> Self {
         Self
@@ -18,7 +22,7 @@ impl zed::Extension for TdrSceneExtension {
             return Err("unsupported language server".to_string());
         }
 
-        lsp::resolve_language_server(worktree)
+        lsp::resolve_language_server(worktree, Self::SERVER_BINARY_NAME)
     }
 }
 

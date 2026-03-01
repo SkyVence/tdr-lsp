@@ -1,12 +1,13 @@
 use std::path::PathBuf;
-use zed_extension_api as zed;
+use zed_extension_api::{self as zed, GithubReleaseOptions};
 
-const LSP_REPO_OWNER: &str = "SkyVence";
-const LSP_REPO_NAME: &str = "traceurs-de-rayons";
-const LSP_BINARY_NAME: &str = "tdr-lsp";
+const LSP_REPO: &str = "SkyVence/traceurs-de-rayons";
 
-pub fn resolve_language_server(worktree: &zed::Worktree) -> zed::Result<zed::Command> {
-    let binary_name = get_binary_name();
+pub fn resolve_language_server(
+    worktree: &zed::Worktree,
+    binary_name: &str,
+) -> zed::Result<zed::Command> {
+    let binary_name = get_binary_name(binary_name);
     let (os, arch) = zed::current_platform();
     let arch_dir = get_arch_dir(os, arch)?;
 
@@ -29,14 +30,14 @@ pub fn resolve_language_server(worktree: &zed::Worktree) -> zed::Result<zed::Com
         }
     }
 
-    download_and_cache(worktree, &binary_name, &arch_dir)
+    download_and_cache(&binary_name, &arch_dir)
 }
 
-fn get_binary_name() -> String {
+fn get_binary_name(binary_name: &str) -> String {
     if cfg!(target_os = "windows") {
-        format!("{}.exe", LSP_BINARY_NAME)
+        format!("{}.exe", binary_name)
     } else {
-        LSP_BINARY_NAME.to_string()
+        binary_name.to_string()
     }
 }
 
@@ -58,44 +59,26 @@ fn find_local_binary(
     arch_dir: &str,
 ) -> Option<String> {
     let root = worktree.root_path();
-    let search_paths = [
-        PathBuf::from(&root)
-            .join("tdr-lsp")
-            .join("zed-ext")
-            .join("bin")
-            .join(arch_dir)
-            .join(binary_name),
-        PathBuf::from(&root)
-            .join("zed-ext")
-            .join("bin")
-            .join(arch_dir)
-            .join(binary_name),
-        PathBuf::from(&root)
-            .join("tdr-lsp")
-            .join("bin")
-            .join(arch_dir)
-            .join(binary_name),
-        PathBuf::from(&root)
-            .join("bin")
-            .join(arch_dir)
-            .join(binary_name),
-    ];
+    let search_path = PathBuf::from(&root)
+        .join("bin")
+        .join(arch_dir)
+        .join(binary_name);
 
-    for path in &search_paths {
-        if path.exists() {
-            return Some(path.to_string_lossy().into_owned());
-        }
+    if search_path.exists() {
+        return Some(search_path.to_string_lossy().into_owned());
     }
     None
 }
 
-fn download_and_cache(
-    worktree: &zed::Worktree,
-    binary_name: &str,
-    arch_dir: &str,
-) -> zed::Result<zed::Command> {
-    let release = zed::latest_github_release(LSP_REPO_OWNER, LSP_REPO_NAME)
-        .map_err(|e| format!("Failed to get latest release: {}", e))?;
+fn download_and_cache(binary_name: &str, arch_dir: &str) -> zed::Result<zed::Command> {
+    let release = zed::latest_github_release(
+        LSP_REPO,
+        GithubReleaseOptions {
+            require_assets: true,
+            pre_release: false,
+        },
+    )
+    .map_err(|e| format!("Failed to get latest release: {}", e))?;
 
     let asset_name = format!("{}/{}", arch_dir, binary_name);
     let asset = release
@@ -126,13 +109,6 @@ fn download_and_cache(
 
     Ok(zed::Command {
         command: dest_path,
-        args: vec![],
-        env: vec![],
-    })
-}
-
-    Ok(zed::Command {
-        command: dest_path.to_string_lossy().into_owned(),
         args: vec![],
         env: vec![],
     })
