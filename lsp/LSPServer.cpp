@@ -1,6 +1,31 @@
 #include "LSPServer.hpp"
-#include "core-utils.hpp"
 #include <sstream>
+
+std::vector<std::string> split(const std::string& str, char sep)
+{
+	std::vector<std::string> result;
+	size_t start = 0;
+	size_t i;
+
+	for (i = 0; i < str.size(); ++i)
+	{
+		if (str[i] == sep)
+		{
+			if (i - start > 0)
+			{
+				std::string	res = str.substr(start, i - start);
+				if (res.length())
+					result.push_back(res);
+			}
+			start = i + 1;
+		}
+	}
+
+	std::string	res = str.substr(start);
+	if (res.length())
+		result.push_back(res);
+	return result;
+}
 
 void LSPServer::run()
 {
@@ -247,7 +272,7 @@ std::optional<ColorInfo> parse_color(const std::string& value)
 			return ColorInfo{r / 255.0, g / 255.0, b / 255.0};
 	}
 
-	auto parts = cu::string::split(value, ',');
+	auto parts = split(value, ',');
 	if (parts.size() == 3)
 	{
 		try

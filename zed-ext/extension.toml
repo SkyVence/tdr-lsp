@@ -1,0 +1,26 @@
+id = "tdr-scene"
+name = "TDR Scene Support"
+version = "0.1.0"
+schema_version = 1
+authors = ["Traceurs de Rayons"]
+description = "TDR Scene / OBJ language support with LSP"
+repository = "https://github.com/Traceurs-de-rayons/tdr-lsp"
+
+
+[grammars.tdr]
+repository = "https://github.com/SkyVence/tree-sitter-tdr-scn"
+rev = "dabd09b6da0698bc72093636c67fe0a571deff37"
+language = "tdr"
+
+[grammars.tdr_obj]
+repository = "https://github.com/SkyVence/tree-sitter-tdr-obj"
+rev = "69ebcec7ed124abfb2326b365aab09778a2a112a"
+language = "tdr_obj"
+
+[language_servers.tdr_lsp]
+name = "TDR Language Server"
+languages = ["TDR Scene", "TDR OBJ"]
+
+[language_servers.tdr_lsp.language_ids]
+"TDR Scene" = "tdr"
+"TDR OBJ" = "tdr-obj"
