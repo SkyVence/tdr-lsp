@@ -1,0 +1,9 @@
+[submodule "scene-io"]
+	path = scene-io
+	url = https://github.com/SkyVence/scene-io.git
+[submodule "scene-core"]
+	path = scene-core
+	url = https://github.com/SkyVence/scene-core.git
+[submodule "core-utils"]
+	path = core-utils
+	url = https://github.com/SkyVence/core-utils.git
