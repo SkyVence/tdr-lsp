@@ -42,21 +42,13 @@ jobs:
             include
             src
 
-      - name: Setup CMake
-        uses: lukka/get-cmake@v4
+      - name: Configure and Build
+        uses: threeal/cmake-action@v1
         with:
-          cmakeVersion: '3.28'
-
-      - name: Configure
-        run: |
-          mkdir build
-          cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build
-        run: |
-          cd build
-          cmake --build . --config Release
+          source-dir: .
+          build-dir: build
+          options: -DCMAKE_BUILD_TYPE=Release
+          build-args: --config Release
 
       - name: Prepare artifact
         run: |
