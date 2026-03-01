@@ -32,16 +32,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Checkout scene-io dependency
-        uses: actions/checkout@v4
-        with:
-          repository: SkyVence/scene-io
-          path: scene-io
-          sparse-checkout: |
-            CMakeLists.txt
-            include
-            src
-
       - name: Configure and Build
         uses: threeal/cmake-action@v1
         with:
