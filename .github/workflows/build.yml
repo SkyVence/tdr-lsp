@@ -38,6 +38,8 @@ jobs:
           source-dir: .
           build-dir: build
           options: CMAKE_BUILD_TYPE=Release
+          run-build: true
+          build-args: --target tdr-lsp
 
       - name: Prepare artifact
         run: |
