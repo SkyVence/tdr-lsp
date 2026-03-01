@@ -1,14 +1,14 @@
 use std::path::PathBuf;
 use zed_extension_api::{self as zed, GithubReleaseOptions};
 
-const LSP_REPO: &str = "SkyVence/traceurs-de-rayons";
+const LSP_REPO: &str = "SkyVence/tdr-lsp";
 
 pub fn resolve_language_server(
     worktree: &zed::Worktree,
     binary_name: &str,
 ) -> zed::Result<zed::Command> {
-    let binary_name = get_binary_name(binary_name);
     let (os, arch) = zed::current_platform();
+    let binary_name = get_binary_name(binary_name, os);
     let arch_dir = get_arch_dir(os, arch)?;
 
     if let Some(path) = worktree.which(&binary_name) {
@@ -30,11 +30,11 @@ pub fn resolve_language_server(
         }
     }
 
-    download_and_cache(&binary_name, &arch_dir)
+    download_and_cache(&binary_name, &arch_dir, os)
 }
 
-fn get_binary_name(binary_name: &str) -> String {
-    if cfg!(target_os = "windows") {
+fn get_binary_name(binary_name: &str, os: zed::Os) -> String {
+    if matches!(os, zed::Os::Windows) {
         format!("{}.exe", binary_name)
     } else {
         binary_name.to_string()
@@ -70,7 +70,7 @@ fn find_local_binary(
     None
 }
 
-fn download_and_cache(binary_name: &str, arch_dir: &str) -> zed::Result<zed::Command> {
+fn download_and_cache(binary_name: &str, arch_dir: &str, os: zed::Os) -> zed::Result<zed::Command> {
     let release = zed::latest_github_release(
         LSP_REPO,
         GithubReleaseOptions {
@@ -103,8 +103,9 @@ fn download_and_cache(binary_name: &str, arch_dir: &str) -> zed::Result<zed::Com
     )
     .map_err(|e| format!("Failed to download LSP: {}", e))?;
 
-    if !cfg!(target_os = "windows") {
-        let _ = zed::make_file_executable(&dest_path);
+    if matches!(os, zed::Os::Windows) {
+        zed::make_file_executable(&dest_path)
+            .map_err(|e| format!("Failed to set executable bit on '{}': {}", dest_path, e))?;
     }
 
     Ok(zed::Command {
