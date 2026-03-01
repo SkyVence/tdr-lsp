@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use zed_extension_api::{self as zed, GithubReleaseOptions};
 
-const LSP_REPO: &str = "SkyVence/tdr-lsp";
+const LSP_REPO: &str = "skyvence/tdr-lsp";
 
 pub fn resolve_language_server(
     worktree: &zed::Worktree,
@@ -79,19 +79,25 @@ fn download_and_cache(binary_name: &str, arch_dir: &str, os: zed::Os) -> zed::Re
         },
     )
     .map_err(|e| format!("Failed to get latest release: {}", e))?;
+    println!("Latest release: {}", release.version);
 
-    let asset_name = format!("{}/{}", arch_dir, binary_name);
+    // Try both "arch_dir/binary" and "binary" asset name formats so releases
+    // that don't include the arch directory prefix still work.
+    let asset_name_with_dir = format!("{}/{}", arch_dir, binary_name);
+    let asset_name_no_dir = binary_name.to_string();
     let asset = release
         .assets
         .iter()
-        .find(|a| a.name == asset_name)
+        .find(|a| a.name == asset_name_with_dir || a.name == asset_name_no_dir)
         .ok_or_else(|| {
             format!(
-                "Asset '{}' not found in latest release. Available: {:?}",
-                asset_name,
+                "Asset '{}' or '{}' not found in latest release. Available: {:?}",
+                asset_name_with_dir,
+                asset_name_no_dir,
                 release.assets.iter().map(|a| &a.name).collect::<Vec<_>>()
             )
         })?;
+    println!("Selected asset: {}", asset.name);
 
     let dest_dir = format!("bin/{}", arch_dir);
     let dest_path = format!("{}/{}", dest_dir, binary_name);
