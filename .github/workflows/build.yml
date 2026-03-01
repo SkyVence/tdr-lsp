@@ -43,7 +43,7 @@ jobs:
             src
 
       - name: Setup CMake
-        uses: ashutoshvarma/setup-cmake@v1
+        uses: cmake/setup-cmake@v3
         with:
           cmake-version: '3.28'
 
